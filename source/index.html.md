@@ -1085,7 +1085,10 @@ Add a deployment and trigger an additional round of testing for one of the sites
 
 Depending on the number of URLs you have it can take a few min to complete a round of tests across your site so we don't recommend making this a dependency for deployments. Rather you should trigger a post deployment request to the API to trigger a round of testing once your release is live.
 
-Only one deploy at a time is allowed on a specific site_id or url_id. You'll get a 403 error while a deploy is in progress and must wait for it to complete before kicking off another deploy.
+Common reasons of getting 403 HTTP error status when submitting a new deploy:
+* a deploy is in progress - only one deploy at a time is allowed on a specific site_id or url_id. You must wait for it to complete before kicking off another deploy.
+* checks per month budget exceeded for the team - please increase checks budget for your account
+* some tests failed to be added - try later or contact the support team
 
 ### HTTP Request
 
@@ -1310,7 +1313,7 @@ curl "https://api.speedcurve.com/v1/import"
 --data data={ JSON settings object }
 ```
 
-> Response
+> Success Response
 
 ```json
 {
@@ -1322,6 +1325,24 @@ curl "https://api.speedcurve.com/v1/import"
 You can update the settings in your account/team by importing JSON settings. [Bulk site settings import](https://support.speedcurve.com/en/articles/74074-bulk-site-settings-import) shows the JSON schema required which you can use to add new sites, browsers, regions and test times or update existing URLs.
 
 Using this endpoint you can keep all your settings in version control or programmatically update specific URLs as often as you like.
+
+Please note the size of JSON payload you can send is restricted to **1MB**.
+
+### Error responses
+
+> Error Response
+
+```json
+{
+  "status":"error",
+  "message":"Trying to add new sites and settings to existing team 'XXX' would it over its current monthly budget of 10000.  Total unallocated budget for 'XXX' is 1000, but 50000 is required."
+}
+```
+
+Common HTTP response statuses and their reasons:
+* 400 - validation problems (malformed or over-sized JSON)
+* 500 - logic errors or account restrictions in imported settings (wrong site category, adding new sites with number of checks bringing account over its checks budget, no testing regions specified etc.)
+* 503 - timeout, it's recommended to split your JSON to batches 30 sites or less
 
 ### HTTP Request
 
